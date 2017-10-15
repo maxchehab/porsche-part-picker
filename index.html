@@ -1,0 +1,227 @@
+<html>
+
+<head>
+     <title>Porsche Parter</title>
+     <link rel="shortcut icon" href="./static/genesis_logo.png">
+
+     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+
+     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/0.100.2/css/materialize.min.css">
+     <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/0.100.2/js/materialize.min.js"></script>
+
+     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
+     <link href="https://fonts.googleapis.com/css?family=Open+Sans|Material+Icons" rel="stylesheet">
+     <style>
+          .search {
+               box-sizing: border-box !important;
+               -webkit-box-sizing: border-box !important;
+
+               font-size: 120px;
+               width: 100%;
+               height: 100%;
+               color: white;
+               padding-left: 40px;
+               border: none !important;
+               overflow: hidden;
+               -webkit-box-shadow: 0 2px 2px 0 rgba(0, 0, 0, 0.14), 0 1px 5px 0 rgba(0, 0, 0, 0.12), 0 3px 1px -2px rgba(0, 0, 0, 0.2);
+               box-shadow: 0 2px 2px 0 rgba(0, 0, 0, 0.14), 0 1px 5px 0 rgba(0, 0, 0, 0.12), 0 3px 1px -2px rgba(0, 0, 0, 0.2);
+          }
+
+
+          .search::placeholder {
+               color: white;
+          }
+
+          .big {
+               animation: big .25s;
+               animation-fill-mode: forwards;
+               -webkit-animation: big .25s;
+               /* Chrome, Safari, Opera */
+               -webkit-animation-fill-mode: forwards;
+          }
+
+          .small {
+               text-shadow: 0 1px 2px rgba(0, 0, 0, 0.15);
+               animation: small .25s;
+               animation-fill-mode: forwards;
+               -webkit-animation: small .25s;
+               /* Chrome, Safari, Opera */
+               -webkit-animation-fill-mode: forwards;
+          }
+
+          @-webkit-keyframes big {
+               from {
+                    width: 100%;
+                    height: 72px;
+                    font-size: 35px;
+               }
+               to {
+                    font-size: 120px;
+                    width: 100%;
+                    height: 100%;
+               }
+          }
+
+          @keyframes big {
+               from {
+                    width: 100%;
+                    height: 72px;
+                    font-size: 35px;
+               }
+               to {
+                    font-size: 120px;
+                    width: 100%;
+                    height: 100%;
+               }
+          }
+
+          @-webkit-keyframes small {
+               from {
+                    font-size: 120px;
+                    width: 100%;
+                    height: 100%;
+               }
+
+               to {
+                    width: 100%;
+                    height: 72px;
+                    font-size: 35px;
+               }
+          }
+
+          @keyframes small {
+               from {
+                    font-size: 120px;
+                    width: 100%;
+                    height: 100%;
+               }
+
+               to {
+                    width: 100%;
+                    height: 120px;
+                    font-size: 35px;
+               }
+          }
+
+          .loading-state .loading {
+               display: flex;
+               flex-flow: column;
+          }
+
+          .result-state .results {
+               display: block;
+          }
+
+          .results {
+               display: none;
+          }
+
+          .loading {
+               height: 80%;
+               width: 100%;
+               display: none;
+               justify-content: center;
+               align-items: center;
+          }
+
+          .collection-item {
+               cursor: pointer;
+          }
+
+          .card {
+               cursor: pointer;
+          }
+
+          .card:hover {
+               box-shadow: 0 14px 28px rgba(0, 0, 0, 0.25), 0 20px 20px rgba(0, 0, 0, 0.22);
+          }
+     </style>
+</head>
+
+<body>
+
+     <input class="big browser-default light-blue search" autofocus spellcheck="false" autocomplete="off" placeholder="Search part #..." id="search" type="search" required>
+
+     <div class="loading">
+          <image src="https://media.giphy.com/media/KvK67EaFbq5ry/giphy.gif"></image>
+          <h1>Searching...</h1>
+     </div>
+
+     <div id="results" class="results container">
+
+
+     </div>
+
+     <script>
+          $('.search').keypress(function(e) {
+               if (e.which == 13) {
+                    $(this).addClass("small");
+                    $(this).removeClass("big");
+                    $(this).blur();
+                    search($(this).val());
+                    return false;
+               }
+          });
+
+          $('.search').focus(function() {
+               $(this).addClass("big");
+               $(this).removeClass("small");
+          });
+
+          function search(query) {
+               $("body").removeClass("result-state")
+               $("body").addClass("loading-state");
+               $.ajax({
+                    url: './search.php',
+                    type: 'POST',
+                    data: {
+                         query: query
+                    },
+                    success: function(data) {
+                         console.log("search: " + data);
+                         data = JSON.parse(data);
+                         $("#results").empty();
+                         if (data.results.length > 0) {
+                              var row = $("<div class=\"row\"></div>");
+                              $("#results").append("<div class=\"row\">");
+                              for (var i = 0; i < data.results.length; i++) {
+                                   if (i % 3 == 0 && i != 0) {
+                                        $("#results").append(row);
+                                        row = $("<div class=\"row\"></div>");
+                                   }
+
+                                   var result = data.results[i];
+                                   var card = $("<div onclick=\"redirect('" + result.link + "')\" class=\"col s12 m4\"><div class=\"card medium\"><div class=\"card-image\"><img src=\"" + result.img +
+                                        "\"></div><div class=\"card-content\"><span class=\"card-title\">" + result.name.substring(0, 40) +
+                                        "</span><p>" + result.price + "</p></div></div></div>");
+
+                                   $(row).append(card);
+                              }
+                              console.log(row);
+                              $("#results").append(row);
+
+
+                              $("body").addClass("result-state")
+                              $("body").removeClass("loading-state");
+                         }
+                    }
+               });
+          //     debug(query);
+          }
+
+          function redirect(link) {
+               var win = window.open(link, '_blank');
+               if (win) {
+                    win.focus();
+               } else {
+                    alert('Please allow popups for this website');
+               }
+          }
+
+          function debug(str) {
+               Materialize.toast(str, 5000)
+          }
+     </script>
+</body>
+
+</html>
